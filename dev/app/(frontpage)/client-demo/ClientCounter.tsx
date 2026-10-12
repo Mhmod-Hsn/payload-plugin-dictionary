@@ -37,8 +37,20 @@ export function ClientCounter() {
           <span>{t('button.cancel')}</span>
         </div>
         <div>
-          <strong style={{ color: '#fbbf24' }}>t(&apos;home.title&apos;):</strong>{' '}
-          <span>{t('home.title')}</span>
+          <strong style={{ color: '#38bdf8' }}>
+            t(&apos;greeting.user&apos;, &#123; name: &apos;Sarah&apos; &#125;):
+          </strong>{' '}
+          <span style={{ color: '#bae6fd' }}>
+            {t('greeting.user', { name: 'Sarah' }, 'Welcome back, Sarah!')}
+          </span>
+        </div>
+        <div>
+          <strong style={{ color: '#38bdf8' }}>
+            t(&apos;cart.items&apos;, &#123; count: {count} &#125;):
+          </strong>{' '}
+          <span style={{ color: '#a5f3fc', fontWeight: 600 }}>
+            {t('cart.items', { count }, `You have ${count} items in your cart`)}
+          </span>
         </div>
         <div>
           <strong style={{ color: '#a78bfa' }}>t(&apos;non.existent&apos;, &apos;Custom Fallback&apos;):</strong>{' '}

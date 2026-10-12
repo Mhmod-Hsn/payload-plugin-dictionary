@@ -24,18 +24,22 @@ export const seed = async (payload: Payload) => {
     })
   }
 
-  // ── Seed translations ─────────────────────────────────────────────────────
-  const { totalDocs: translationCount } = await payload.count({
-    collection: 'translations',
-  })
-
-  // Only seed if the collection is empty.
-  if (translationCount > 0) {
-    return
-  }
-
   const translations = [
     // ── common namespace ──
+    {
+      key: 'greeting.user',
+      namespace: 'common',
+      value: 'Welcome back, {name}!',
+      value_ar: 'مرحبًا بعودتك، {name}!',
+      value_fr: 'Ravi de vous revoir, {name} !',
+    },
+    {
+      key: 'cart.items',
+      namespace: 'common',
+      value: 'You have {count} items in your cart',
+      value_ar: 'لديك {count} عناصر في عربة التسوق',
+      value_fr: 'Vous avez {count} articles dans votre panier',
+    },
     {
       key: 'button.submit',
       namespace: 'common',
@@ -178,11 +182,32 @@ export const seed = async (payload: Payload) => {
       value_ar: 'ماذا يقول مستخدمونا',
       value_fr: 'Ce que disent nos utilisateurs',
     },
+    {
+      key: 'promo.discount',
+      namespace: 'marketing',
+      value: 'Use code {code} for {discount}% off!',
+      value_ar: 'استخدم الرمز {code} للحصول على خصم {discount}%!',
+      value_fr: 'Utilisez le code {code} pour obtenir {discount} % de réduction !',
+    },
   ]
 
   payload.logger.info(`🌱 Seeding ${translations.length} translations...`)
 
   for (const t of translations) {
+    const existing = await payload.find({
+      collection: 'translations',
+      limit: 1,
+      where: {
+        key: {
+          equals: t.key,
+        },
+      },
+    })
+
+    if (existing.totalDocs > 0) {
+      continue
+    }
+
     // Create with the default locale (en) first.
     const doc = await payload.create({
       collection: 'translations',
