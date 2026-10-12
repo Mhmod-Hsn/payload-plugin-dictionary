@@ -30,6 +30,7 @@ export default [
   {
     rules: {
       'no-restricted-exports': 'off',
+      'jsx-a11y/accessible-emoji': 'off',
     },
   },
   {
