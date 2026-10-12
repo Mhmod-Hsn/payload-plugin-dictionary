@@ -93,6 +93,7 @@
       "optional": true
     }
   },
+  "packageManager": "pnpm@10.33.2",
   "engines": {
     "node": ">=20.18.1",
     "pnpm": "^9 || ^10 || ^11"
@@ -136,9 +137,13 @@
     "i18next",
     "localization"
   ],
+  "homepage": "https://mhmod-hsn.github.io/payload-plugin-dictionary",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git+https://github.com/Mhmod-Hsn/payload-plugin-dictionary.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Mhmod-Hsn/payload-plugin-dictionary/issues"
   },
   "registry": "https://registry.npmjs.org/",
   "dependencies": {}

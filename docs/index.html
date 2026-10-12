@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>payload-plugin-dictionary — Payload CMS v3 Translation Plugin</title>
+  <meta name="description" content="A high-performance Payload CMS v3 plugin that moves static frontend translation keys into your database. Empower content editors to manage UI microcopy with instant cache revalidation." />
+  <meta name="keywords" content="payload, payloadcms, plugin, dictionary, translations, i18n, next-intl, i18next, localization, next.js" />
+  <meta name="author" content="Mahmoud Hassan" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="payload-plugin-dictionary" />
+  <meta property="og:description" content="Database-backed translations for Payload CMS v3 with instant cache revalidation." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://mhmod-hsn.github.io/payload-plugin-dictionary" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Mermaid -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
+  <style>
+    /* ── Reset & Tokens ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-root: #0a0e1a;
+      --bg-surface: #111827;
+      --bg-elevated: #1e293b;
+      --bg-glass: rgba(30, 41, 59, 0.65);
+      --border: #1e293b;
+      --border-subtle: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-purple: #a78bfa;
+      --accent-green: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-pink: #f472b6;
+      --gradient-hero: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #a78bfa 100%);
+      --gradient-card: linear-gradient(145deg, rgba(56, 189, 248, 0.08), rgba(167, 139, 250, 0.05));
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-xs: 6px;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+      --max-w: 960px;
+      --nav-h: 64px;
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 2rem); }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-root);
+      color: var(--text-primary);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── Ambient Glow ── */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -30%;
+      left: -10%;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -20%;
+      right: -10%;
+      width: 50%;
+      height: 50%;
+      background: radial-gradient(circle, rgba(167, 139, 250, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Navigation ── */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--nav-h);
+      background: rgba(10, 14, 26, 0.82);
+      backdrop-filter: blur(16px) saturate(1.6);
+      -webkit-backdrop-filter: blur(16px) saturate(1.6);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-inner {
+      width: 100%;
+      max-width: var(--max-w);
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .nav-brand span { font-size: 1.25rem; }
+    .nav-links { display: flex; gap: 0.25rem; align-items: center; }
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--radius-xs);
+      transition: color var(--transition), background var(--transition);
+    }
+    .nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+    .nav-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border-subtle);
+      padding: 0.4rem 0.85rem;
+      border-radius: var(--radius-sm);
+      color: var(--text-primary) !important;
+      font-weight: 600;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .nav-github:hover { background: rgba(255,255,255,0.1); border-color: var(--accent-blue); }
+    .nav-github svg { width: 16px; height: 16px; }
+
+    /* Mobile nav toggle */
+    .nav-toggle { display: none; background: none; border: none; color: var(--text-primary); cursor: pointer; padding: 0.5rem; }
+    .nav-toggle svg { width: 24px; height: 24px; }
+
+    @media (max-width: 768px) {
+      .nav-toggle { display: block; }
+      .nav-links {
+        position: fixed;
+        top: var(--nav-h);
+        left: 0;
+        right: 0;
+        background: rgba(10, 14, 26, 0.95);
+        backdrop-filter: blur(16px);
+        flex-direction: column;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        transform: translateY(-120%);
+        transition: transform 0.3s ease;
+      }
+      .nav-links.open { transform: translateY(0); }
+      .nav-links a { padding: 0.75rem 1rem; width: 100%; }
+    }
+
+    /* ── Content Container ── */
+    .container {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Hero Section ── */
+    .hero {
+      padding-top: calc(var(--nav-h) + 5rem);
+      padding-bottom: 4rem;
+      text-align: center;
+    }
+    .hero-badges {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .hero-badges img { height: 22px; }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      background: var(--gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1.25rem;
+      line-height: 1.15;
+    }
+    .hero-subtitle {
+      font-size: clamp(1rem, 2.2vw, 1.2rem);
+      color: var(--text-secondary);
+      max-width: 700px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.7;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all var(--transition);
+      cursor: pointer;
+      border: none;
+      font-family: var(--font-sans);
+    }
+    .btn-primary {
+      background: var(--gradient-hero);
+      color: #0f172a;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(56, 189, 248, 0.25); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+    .btn-secondary:hover { border-color: var(--accent-blue); background: rgba(255,255,255,0.1); }
+
+    /* Install snippet */
+    .install-snippet {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1rem;
+      margin-top: 2rem;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--accent-green);
+    }
+    .install-snippet .dollar { color: var(--text-muted); user-select: none; }
+    .install-copy {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: color var(--transition);
+      display: flex;
+    }
+    .install-copy:hover { color: var(--text-primary); }
+    .install-copy svg { width: 16px; height: 16px; }
+
+    /* ── Comparison Table (Hero) ── */
+    .comparison {
+      margin-top: 4rem;
+      overflow-x: auto;
+    }
+    .comparison table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .comparison th {
+      padding: 1rem 1.25rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+    }
+    .comparison td {
+      padding: 0.85rem 1.25rem;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .comparison tr:last-child td { border-bottom: none; }
+    .comparison .col-old { color: var(--text-muted); }
+    .comparison .col-new { color: var(--accent-green); }
+
+    /* ── Section ── */
+    .section { padding: 4rem 0; }
+    .section-header {
+      margin-bottom: 2.5rem;
+    }
+    .section-header h2 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .section-header p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      max-width: 600px;
+    }
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+      margin: 0;
+      border: none;
+    }
+
+    /* ── Feature Grid ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+    .feature-card {
+      background: var(--gradient-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: border-color var(--transition), transform var(--transition);
+    }
+    .feature-card:hover { border-color: var(--border-subtle); transform: translateY(-2px); }
+    .feature-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+    .feature-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    /* ── Code Blocks ── */
+    .code-block {
+      position: relative;
+      margin: 1.25rem 0;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      background: var(--bg-surface);
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .code-copy {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.75rem;
+      font-family: var(--font-sans);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      transition: color var(--transition), background var(--transition);
+    }
+    .code-copy:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+    .code-copy svg { width: 14px; height: 14px; }
+    .code-content {
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: var(--text-primary);
+      tab-size: 2;
+    }
+    .code-content code { font-family: inherit; }
+
+    /* Syntax highlighting classes */
+    .token-keyword { color: #c792ea; }
+    .token-string { color: #c3e88d; }
+    .token-comment { color: #546e7a; font-style: italic; }
+    .token-func { color: #82aaff; }
+    .token-type { color: #ffcb6b; }
+    .token-prop { color: #f07178; }
+    .token-const { color: #89ddff; }
+    .token-tag { color: #f07178; }
+    .token-attr { color: #c792ea; }
+    .token-punc { color: #89ddff; }
+    .token-num { color: #f78c6c; }
+
+    /* ── Options Table ── */
+    .options-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin: 1rem 0;
+    }
+    .options-table th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+    }
+    .options-table td {
+      padding: 0.7rem 1rem;
+      font-size: 0.88rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .options-table tr:last-child td { border-bottom: none; }
+    .options-table code {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      background: var(--bg-elevated);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      color: var(--accent-amber);
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin: 1.5rem 0;
+    }
+    .tab-buttons {
+      display: flex;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all var(--transition);
+    }
+    .tab-btn.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); background: rgba(56, 189, 248, 0.05); }
+    .tab-btn:hover:not(.active) { color: var(--text-secondary); }
+    .tab-panel { display: none; padding: 1.5rem; background: var(--bg-surface); }
+    .tab-panel.active { display: block; }
+    .tab-panel h3 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+    .tab-panel p, .tab-panel li { color: var(--text-secondary); font-size: 0.92rem; line-height: 1.7; }
+
+    /* ── Entrypoints ── */
+    .entrypoints {
+      display: grid;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .entrypoint {
+      background: var(--gradient-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1.25rem;
+    }
+    .entrypoint-path {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      color: var(--accent-blue);
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+    .entrypoint-desc {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+    }
+
+    /* ── Mermaid ── */
+    .mermaid-wrapper {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2.5rem 1.5rem;
+      margin: 1.75rem 0;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .mermaid {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    .mermaid svg {
+      width: 100% !important;
+      max-width: 900px !important;
+      min-width: 680px;
+      height: auto !important;
+      filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.25));
+    }
+    .mermaid svg .actor {
+      font-size: 15px !important;
+      font-weight: 600 !important;
+    }
+    .mermaid svg .messageText {
+      font-size: 14px !important;
+    }
+
+    /* ── API Section ── */
+    .api-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin: 1rem 0;
+    }
+    .api-method {
+      display: inline-block;
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--accent-green);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin-right: 0.5rem;
+    }
+    .api-path {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+    .api-desc {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Translator API Table ── */
+    .t-api-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+    .t-api-table th {
+      padding: 0.7rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+    }
+    .t-api-table td {
+      padding: 0.65rem 1rem;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .t-api-table tr:last-child td { border-bottom: none; }
+    .t-api-table td:first-child {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent-blue);
+      white-space: nowrap;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      padding: 3rem 0;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    .footer a { color: var(--accent-blue); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-root); }
+    ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in {
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards;
+    }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+
+    /* ── Back to top ── */
+    .back-to-top {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: all var(--transition);
+      z-index: 50;
+    }
+    .back-to-top.visible { opacity: 1; pointer-events: auto; }
+    .back-to-top:hover { background: var(--accent-blue); color: #0f172a; border-color: var(--accent-blue); }
+    .back-to-top svg { width: 20px; height: 20px; }
+
+    /* ── Inline code ── */
+    p code, li code, td code:not(.code-content code) {
+      font-family: var(--font-mono);
+      font-size: 0.84em;
+      background: var(--bg-elevated);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      color: var(--accent-amber);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand"><span>📖</span> payload-plugin-dictionary</a>
+    <button class="nav-toggle" aria-label="Toggle navigation" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#installation">Install</a>
+      <a href="#configuration">Config</a>
+      <a href="#usage">Usage</a>
+      <a href="#api">API</a>
+      <a href="#cache">Cache</a>
+      <a href="https://github.com/Mhmod-Hsn/payload-plugin-dictionary" target="_blank" rel="noopener" class="nav-github">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero container">
+  <div class="hero-badges animate-in">
+    <img src="https://img.shields.io/npm/v/payload-plugin-dictionary.svg" alt="npm version" />
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License" />
+    <img src="https://img.shields.io/badge/Payload%20CMS-v3-black.svg" alt="Payload CMS v3" />
+    <img src="https://img.shields.io/badge/Next.js-15%20%7C%2016-black.svg" alt="Next.js" />
+    <img src="https://img.shields.io/badge/TypeScript-Strict-blue.svg" alt="TypeScript" />
+  </div>
+
+  <h1 class="animate-in delay-1">payload-plugin-dictionary</h1>
+
+  <p class="hero-subtitle animate-in delay-2">
+    A high-performance <strong>Payload CMS v3</strong> plugin that moves static front-end translation keys into your database.
+    Empower content editors to manage UI microcopy directly in the Admin Panel, with instant on-demand cache revalidation and zero required third-party dependencies.
+  </p>
+
+  <div class="hero-actions animate-in delay-3">
+    <a href="#installation" class="btn btn-primary">Get Started</a>
+    <a href="https://github.com/Mhmod-Hsn/payload-plugin-dictionary" target="_blank" rel="noopener" class="btn btn-secondary">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      View on GitHub
+    </a>
+  </div>
+
+  <div class="install-snippet animate-in delay-3">
+    <span class="dollar">$</span>
+    <span id="install-cmd">pnpm add payload-plugin-dictionary</span>
+    <button class="install-copy" onclick="copyText('pnpm add payload-plugin-dictionary', this)" title="Copy to clipboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+    </button>
+  </div>
+
+  <!-- Comparison Table -->
+  <div class="comparison animate-in delay-3">
+    <table>
+      <thead>
+        <tr>
+          <th>Traditional Static i18n (<code>en.json</code>)</th>
+          <th>With <code>payload-plugin-dictionary</code></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="col-old">Hardcoded in Git repository</td>
+          <td class="col-new">Managed in Payload Admin Panel</td>
+        </tr>
+        <tr>
+          <td class="col-old">Copy changes require PRs &amp; redeployments</td>
+          <td class="col-new">Instant updates with zero downtime</td>
+        </tr>
+        <tr>
+          <td class="col-old">Content editors cannot modify microcopy</td>
+          <td class="col-new">Content editors have full localized control</td>
+        </tr>
+        <tr>
+          <td class="col-old">Often requires bulky client bundles</td>
+          <td class="col-new">Server Components with automatic cache eviction</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ═══════════ FEATURES ═══════════ -->
+<section id="features" class="section container">
+  <div class="section-header">
+    <h2>✨ Features</h2>
+    <p>Everything you need to manage frontend translations at scale.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">🗄️</span>
+      <h3>Database-Backed Translations</h3>
+      <p>Moves static translation keys into a dedicated <code>translations</code> collection with native localization support.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⚡</span>
+      <h3>Next.js Data Cache Integration</h3>
+      <p>Wrapped with <code>unstable_cache</code> and tagged with <code>'payload-translations'</code> for millisecond response times.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔄</span>
+      <h3>Instant Revalidation</h3>
+      <p>Automatically invalidates cache tags when translations are created, updated, or deleted via collection hooks.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⚛️</span>
+      <h3>Zero-Dependency Mode</h3>
+      <p>Full standalone support with <code>t('key')</code> functions for both Server and Client Components.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔌</span>
+      <h3>next-intl &amp; i18next Compatible</h3>
+      <p>Seamlessly acts as the dynamic message provider for your existing i18n library.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🌐</span>
+      <h3>Built-in REST Endpoint</h3>
+      <p>Direct HTTP access via <code>GET /api/dictionary/:namespace</code> with caching headers.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🛡️</span>
+      <h3>Type-Safe CLI Generator</h3>
+      <p>Run <code>npx payload-dictionary generate</code> to get full TypeScript autocompletion from your DB keys.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔒</span>
+      <h3>Data Integrity</h3>
+      <p>Enforces dot-separated key notation and composite uniqueness across <code>(namespace, key)</code> pairs.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ═══════════ INSTALLATION ═══════════ -->
+<section id="installation" class="section container">
+  <div class="section-header">
+    <h2>📦 Installation</h2>
+    <p>Install with your favorite package manager.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>bash</span>
+      <button class="code-copy" onclick="copyCode(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy
+      </button>
+    </div>
+    <pre class="code-content"><code><span class="token-comment"># Using pnpm</span>
+pnpm add payload-plugin-dictionary
+
+<span class="token-comment"># Using npm</span>
+npm install payload-plugin-dictionary
+
+<span class="token-comment"># Using yarn</span>
+yarn add payload-plugin-dictionary</code></pre>
+  </div>
+
+  <h3 style="margin-top: 1.5rem; font-size: 1rem; color: var(--text-secondary); font-weight: 600;">Peer Dependencies</h3>
+  <table class="options-table" style="margin-top: 0.75rem;">
+    <thead><tr><th>Package</th><th>Version</th><th>Required</th></tr></thead>
+    <tbody>
+      <tr><td><code>payload</code></td><td><code>^3.90.0</code></td><td>Yes</td></tr>
+      <tr><td><code>next</code></td><td><code>^15.0.0 || ^16.0.0</code></td><td>Yes</td></tr>
+      <tr><td><code>react</code></td><td><code>^19.0.0</code></td><td>Optional (client only)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ═══════════ CONFIGURATION ═══════════ -->
+<section id="configuration" class="section container">
+  <div class="section-header">
+    <h2>⚙️ Configuration</h2>
+    <p>Add <code>dictionaryPlugin</code> to your <code>payload.config.ts</code></p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>payload.config.ts</span>
+      <button class="code-copy" onclick="copyCode(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy
+      </button>
+    </div>
+    <pre class="code-content"><code><span class="token-keyword">import</span> { buildConfig } <span class="token-keyword">from</span> <span class="token-string">'payload'</span>
+<span class="token-keyword">import</span> { dictionaryPlugin } <span class="token-keyword">from</span> <span class="token-string">'payload-plugin-dictionary'</span>
+
+<span class="token-keyword">export default</span> <span class="token-func">buildConfig</span>({
+  <span class="token-prop">localization</span>: {
+    <span class="token-prop">locales</span>: [<span class="token-string">'en'</span>, <span class="token-string">'ar'</span>, <span class="token-string">'fr'</span>],
+    <span class="token-prop">defaultLocale</span>: <span class="token-string">'en'</span>,
+    <span class="token-prop">fallback</span>: <span class="token-const">true</span>,
+  },
+  <span class="token-prop">plugins</span>: [
+    <span class="token-func">dictionaryPlugin</span>({
+      <span class="token-prop">namespaces</span>: [<span class="token-string">'common'</span>, <span class="token-string">'auth'</span>, <span class="token-string">'marketing'</span>],
+      <span class="token-prop">defaultNamespace</span>: <span class="token-string">'common'</span>,
+    }),
+  ],
+})</code></pre>
+  </div>
+
+  <h3 style="margin-top: 1.5rem; font-size: 1rem; font-weight: 600;">Plugin Options</h3>
+  <table class="options-table" style="margin-top: 0.75rem;">
+    <thead><tr><th>Option</th><th>Type</th><th>Required</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>namespaces</code></td>
+        <td><code>string[]</code></td>
+        <td><strong>Yes</strong></td>
+        <td>—</td>
+        <td>Array of permitted namespaces</td>
+      </tr>
+      <tr>
+        <td><code>defaultNamespace</code></td>
+        <td><code>string</code></td>
+        <td>No</td>
+        <td><code>namespaces[0]</code></td>
+        <td>Default namespace for new documents</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ═══════════ USAGE ═══════════ -->
+<section id="usage" class="section container">
+  <div class="section-header">
+    <h2>🚀 Usage Guide</h2>
+    <p>Choose standalone mode or integrate with your existing i18n library.</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab-buttons">
+      <button class="tab-btn active" data-tab="standalone">Standalone (Zero Dependencies)</button>
+      <button class="tab-btn" data-tab="nextintl">With next-intl</button>
+    </div>
+
+    <!-- Standalone Tab -->
+    <div class="tab-panel active" id="tab-standalone">
+      <h3>1. React Server Components</h3>
+      <p style="margin-bottom: 0.75rem;">Call <code>getTranslations()</code> in any Server Component:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>app/[locale]/page.tsx</span>
+          <button class="code-copy" onclick="copyCode(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre class="code-content"><code><span class="token-keyword">import</span> { getTranslations } <span class="token-keyword">from</span> <span class="token-string">'payload-plugin-dictionary/cache'</span>
+
+<span class="token-keyword">export default async function</span> <span class="token-func">HomePage</span>({ params }) {
+  <span class="token-keyword">const</span> { locale } = <span class="token-keyword">await</span> params
+  <span class="token-keyword">const</span> t = <span class="token-keyword">await</span> <span class="token-func">getTranslations</span>(<span class="token-string">'common'</span>, locale)
+
+  <span class="token-keyword">return</span> (
+    <span class="token-punc">&lt;</span><span class="token-tag">main</span><span class="token-punc">&gt;</span>
+      <span class="token-comment">{/* Basic lookup */}</span>
+      <span class="token-punc">&lt;</span><span class="token-tag">h1</span><span class="token-punc">&gt;</span>{<span class="token-func">t</span>(<span class="token-string">'home.title'</span>)}<span class="token-punc">&lt;/</span><span class="token-tag">h1</span><span class="token-punc">&gt;</span>
+
+      <span class="token-comment">{/* Variable interpolation */}</span>
+      <span class="token-punc">&lt;</span><span class="token-tag">p</span><span class="token-punc">&gt;</span>{<span class="token-func">t</span>(<span class="token-string">'welcome.user'</span>, { <span class="token-prop">name</span>: <span class="token-string">'Sarah'</span> })}<span class="token-punc">&lt;/</span><span class="token-tag">p</span><span class="token-punc">&gt;</span>
+
+      <span class="token-comment">{/* Fallback if key is missing */}</span>
+      <span class="token-punc">&lt;</span><span class="token-tag">button</span><span class="token-punc">&gt;</span>{<span class="token-func">t</span>(<span class="token-string">'button.submit'</span>, <span class="token-string">'Submit'</span>)}<span class="token-punc">&lt;/</span><span class="token-tag">button</span><span class="token-punc">&gt;</span>
+    <span class="token-punc">&lt;/</span><span class="token-tag">main</span><span class="token-punc">&gt;</span>
+  )
+}</code></pre>
+      </div>
+
+      <h3 style="margin-top: 2rem;">2. React Client Components</h3>
+      <p style="margin-bottom: 0.75rem;">Wrap your layout with <code>&lt;DictionaryProvider&gt;</code>, then use <code>useTranslations()</code> anywhere:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>app/[locale]/layout.tsx — Server Component</span>
+          <button class="code-copy" onclick="copyCode(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre class="code-content"><code><span class="token-keyword">import</span> { getDictionary } <span class="token-keyword">from</span> <span class="token-string">'payload-plugin-dictionary/cache'</span>
+<span class="token-keyword">import</span> { DictionaryProvider } <span class="token-keyword">from</span> <span class="token-string">'payload-plugin-dictionary/client'</span>
+
+<span class="token-keyword">export default async function</span> <span class="token-func">LocaleLayout</span>({ children, params }) {
+  <span class="token-keyword">const</span> { locale } = <span class="token-keyword">await</span> params
+  <span class="token-keyword">const</span> dictionary = <span class="token-keyword">await</span> <span class="token-func">getDictionary</span>(<span class="token-string">'common'</span>, locale)
+
+  <span class="token-keyword">return</span> (
+    <span class="token-punc">&lt;</span><span class="token-tag">html</span> <span class="token-attr">lang</span>=<span class="token-string">{locale}</span><span class="token-punc">&gt;</span>
+      <span class="token-punc">&lt;</span><span class="token-tag">body</span><span class="token-punc">&gt;</span>
+        <span class="token-punc">&lt;</span><span class="token-type">DictionaryProvider</span> <span class="token-attr">dictionary</span>=<span class="token-string">{dictionary}</span><span class="token-punc">&gt;</span>
+          {children}
+        <span class="token-punc">&lt;/</span><span class="token-type">DictionaryProvider</span><span class="token-punc">&gt;</span>
+      <span class="token-punc">&lt;/</span><span class="token-tag">body</span><span class="token-punc">&gt;</span>
+    <span class="token-punc">&lt;/</span><span class="token-tag">html</span><span class="token-punc">&gt;</span>
+  )
+}</code></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>components/CounterButton.tsx — Client Component</span>
+          <button class="code-copy" onclick="copyCode(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre class="code-content"><code><span class="token-string">'use client'</span>
+
+<span class="token-keyword">import</span> { useTranslations } <span class="token-keyword">from</span> <span class="token-string">'payload-plugin-dictionary/client'</span>
+<span class="token-keyword">import</span> { useState } <span class="token-keyword">from</span> <span class="token-string">'react'</span>
+
+<span class="token-keyword">export function</span> <span class="token-func">CounterButton</span>() {
+  <span class="token-keyword">const</span> t = <span class="token-func">useTranslations</span>()
+  <span class="token-keyword">const</span> [count, setCount] = <span class="token-func">useState</span>(<span class="token-num">0</span>)
+
+  <span class="token-keyword">return</span> (
+    <span class="token-punc">&lt;</span><span class="token-tag">div</span><span class="token-punc">&gt;</span>
+      <span class="token-punc">&lt;</span><span class="token-tag">button</span> <span class="token-attr">onClick</span>={() => setCount(c => c + <span class="token-num">1</span>)}<span class="token-punc">&gt;</span>
+        {<span class="token-func">t</span>(<span class="token-string">'button.click_me'</span>)} ({count})
+      <span class="token-punc">&lt;/</span><span class="token-tag">button</span><span class="token-punc">&gt;</span>
+      <span class="token-punc">&lt;</span><span class="token-tag">p</span><span class="token-punc">&gt;</span>{<span class="token-func">t</span>(<span class="token-string">'items.count'</span>, { count })}<span class="token-punc">&lt;/</span><span class="token-tag">p</span><span class="token-punc">&gt;</span>
+    <span class="token-punc">&lt;/</span><span class="token-tag">div</span><span class="token-punc">&gt;</span>
+  )
+}</code></pre>
+      </div>
+    </div>
+
+    <!-- next-intl Tab -->
+    <div class="tab-panel" id="tab-nextintl">
+      <h3>Using with next-intl</h3>
+      <p style="margin-bottom: 0.75rem;">Supply the dictionary messages directly to <code>next-intl</code>:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>i18n/request.ts</span>
+          <button class="code-copy" onclick="copyCode(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre class="code-content"><code><span class="token-keyword">import</span> { getRequestConfig } <span class="token-keyword">from</span> <span class="token-string">'next-intl/server'</span>
+<span class="token-keyword">import</span> { getDictionary } <span class="token-keyword">from</span> <span class="token-string">'payload-plugin-dictionary/cache'</span>
+
+<span class="token-keyword">export default</span> <span class="token-func">getRequestConfig</span>(<span class="token-keyword">async</span> ({ requestLocale }) => {
+  <span class="token-keyword">const</span> locale = (<span class="token-keyword">await</span> requestLocale) || <span class="token-string">'en'</span>
+  <span class="token-keyword">const</span> messages = <span class="token-keyword">await</span> <span class="token-func">getDictionary</span>(<span class="token-string">'common'</span>, locale)
+
+  <span class="token-keyword">return</span> { locale, messages }
+})</code></pre>
+      </div>
+
+      <p style="margin-top: 1rem;">Then consume with standard <code>next-intl</code> APIs:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>components/Header.tsx</span>
+          <button class="code-copy" onclick="copyCode(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+        <pre class="code-content"><code><span class="token-keyword">import</span> { useTranslations } <span class="token-keyword">from</span> <span class="token-string">'next-intl'</span>
+
+<span class="token-keyword">export function</span> <span class="token-func">Header</span>() {
+  <span class="token-keyword">const</span> t = <span class="token-func">useTranslations</span>()
+  <span class="token-keyword">return</span> <span class="token-punc">&lt;</span><span class="token-tag">h1</span><span class="token-punc">&gt;</span>{<span class="token-func">t</span>(<span class="token-string">'nav.home'</span>)}<span class="token-punc">&lt;/</span><span class="token-tag">h1</span><span class="token-punc">&gt;</span>
+}</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Translator API -->
+  <h3 style="margin-top: 2.5rem; font-size: 1.1rem;">Translator Function API</h3>
+  <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 1rem;">
+    The <code>t</code> function returned by <code>getTranslations()</code> and <code>useTranslations()</code> provides:
+  </p>
+  <table class="t-api-table">
+    <thead><tr><th>Signature</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>t(key)</td><td>Looks up key; returns key string if missing</td><td><code>t('button.submit')</code></td></tr>
+      <tr><td>t(key, params)</td><td>Replaces <code>{var}</code> placeholders with values</td><td><code>t('greeting', { name: 'Alex' })</code></td></tr>
+      <tr><td>t(key, fallback)</td><td>Returns fallback text if key is missing</td><td><code>t('btn.save', 'Save')</code></td></tr>
+      <tr><td>t(key, params, fallback)</td><td>Replaces placeholders with fallback if missing</td><td><code>t('hello', { name: 'Alex' }, 'Hi')</code></td></tr>
+      <tr><td>t.has(key)</td><td>Returns <code>true</code> if key exists</td><td><code>t.has('banner.alert')</code></td></tr>
+      <tr><td>t.raw(key)</td><td>Returns raw uninterpolated string or <code>undefined</code></td><td><code>t.raw('welcome')</code></td></tr>
+      <tr><td>t.dictionary</td><td>Direct reference to <code>Record&lt;string, string&gt;</code></td><td><code>Object.keys(t.dictionary)</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ═══════════ REST API ═══════════ -->
+<section id="api" class="section container">
+  <div class="section-header">
+    <h2>🌐 Built-in REST API</h2>
+    <p>The plugin automatically registers an HTTP endpoint on your Payload server.</p>
+  </div>
+
+  <div class="api-card">
+    <div>
+      <span class="api-method">GET</span>
+      <span class="api-path">/api/dictionary/:namespace?locale=:locale</span>
+    </div>
+    <p class="api-desc">Returns a flat <code>Record&lt;string, string&gt;</code> of all translations for the given namespace and locale.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+    <div class="code-block" style="margin: 0;">
+      <div class="code-header"><span>Request</span></div>
+      <pre class="code-content"><code><span class="token-func">GET</span> /api/dictionary/common?locale=ar</code></pre>
+    </div>
+    <div class="code-block" style="margin: 0;">
+      <div class="code-header"><span>Response</span></div>
+      <pre class="code-content"><code>{
+  <span class="token-prop">"button.submit"</span>: <span class="token-string">"إرسال"</span>,
+  <span class="token-prop">"button.cancel"</span>: <span class="token-string">"إلغاء"</span>,
+  <span class="token-prop">"nav.home"</span>: <span class="token-string">"الرئيسية"</span>
+}</code></pre>
+    </div>
+  </div>
+
+  <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.88rem;">
+    <strong>Response Headers:</strong>
+    <code>Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400</code>
+  </p>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ═══════════ CLI ═══════════ -->
+<section id="cli" class="section container">
+  <div class="section-header">
+    <h2>🛠️ TypeScript CLI Generator</h2>
+    <p>Generate strongly-typed definitions from your database keys for IDE autocompletion.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>bash</span>
+      <button class="code-copy" onclick="copyCode(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy
+      </button>
+    </div>
+    <pre class="code-content"><code>npx payload-dictionary generate</code></pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Generated: dictionary.d.ts</span></div>
+    <pre class="code-content"><code><span class="token-comment">/**
+ * Auto-generated by payload-dictionary. Do not edit manually.
+ */</span>
+<span class="token-keyword">export type</span> <span class="token-type">CommonTranslationKeys</span> =
+  | <span class="token-string">'button.submit'</span>
+  | <span class="token-string">'button.cancel'</span>
+  | <span class="token-string">'home.title'</span>
+
+<span class="token-keyword">export type</span> <span class="token-type">AuthTranslationKeys</span> =
+  | <span class="token-string">'login.button'</span>
+  | <span class="token-string">'error.invalid_credentials'</span>
+
+<span class="token-keyword">export type</span> <span class="token-type">AllTranslationKeys</span> =
+  | <span class="token-string">`common:${CommonTranslationKeys}`</span>
+  | <span class="token-string">`auth:${AuthTranslationKeys}`</span></code></pre>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ═══════════ CACHE ARCHITECTURE ═══════════ -->
+<section id="cache" class="section container">
+  <div class="section-header">
+    <h2>🔄 Cache Architecture &amp; Invalidation</h2>
+    <p>Automatic cache invalidation ensures editors see instant updates.</p>
+  </div>
+
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Admin as Content Editor
+    participant Payload as Payload Admin Panel
+    participant DB as Database
+    participant NextCache as Next.js Data Cache
+    actor User as Frontend User
+
+    Admin->>Payload: Updates "button.submit" to "Save"
+    Payload->>DB: Saves localized document
+    Payload->>NextCache: revalidateTag('payload-translations')
+    User->>NextCache: Requests page
+    NextCache->>DB: Cache miss → fetches updated dictionary
+    NextCache-->>User: Returns updated translation ("Save")
+    </pre>
+  </div>
+
+  <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+    <li style="color: var(--text-secondary); font-size: 0.92rem; display: flex; gap: 0.75rem; align-items: flex-start;">
+      <span style="color: var(--accent-green);">✓</span>
+      Invalidation occurs automatically on <code>afterChange</code> and <code>afterDelete</code> hooks.
+    </li>
+    <li style="color: var(--text-secondary); font-size: 0.92rem; display: flex; gap: 0.75rem; align-items: flex-start;">
+      <span style="color: var(--accent-green);">✓</span>
+      Compatible with Next.js 15 and Next.js 16 cache models.
+    </li>
+    <li style="color: var(--text-secondary); font-size: 0.92rem; display: flex; gap: 0.75rem; align-items: flex-start;">
+      <span style="color: var(--accent-green);">✓</span>
+      Gracefully handles execution outside Next.js request contexts (tests, CLI tools).
+    </li>
+  </ul>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ═══════════ ENTRYPOINTS ═══════════ -->
+<section id="entrypoints" class="section container">
+  <div class="section-header">
+    <h2>📁 Package Entrypoints</h2>
+  </div>
+
+  <div class="entrypoints">
+    <div class="entrypoint">
+      <div class="entrypoint-path">payload-plugin-dictionary</div>
+      <div class="entrypoint-desc">Plugin initialization &amp; root types — <code>dictionaryPlugin()</code>, <code>createTranslator()</code></div>
+    </div>
+    <div class="entrypoint">
+      <div class="entrypoint-path">payload-plugin-dictionary/cache</div>
+      <div class="entrypoint-desc">Server-only — <code>getTranslations()</code>, <code>getDictionary()</code></div>
+    </div>
+    <div class="entrypoint">
+      <div class="entrypoint-path">payload-plugin-dictionary/client</div>
+      <div class="entrypoint-desc">Client-side — <code>&lt;DictionaryProvider&gt;</code>, <code>useTranslations()</code>, <code>useDictionary()</code></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer class="footer container">
+  <p>MIT © <a href="https://github.com/Mhmod-Hsn" target="_blank" rel="noopener">Mahmoud Hassan</a></p>
+  <p style="margin-top: 0.5rem;">Built with ❤️ for the Payload CMS community</p>
+</footer>
+
+<!-- ═══════════ BACK TO TOP ═══════════ -->
+<button class="back-to-top" onclick="window.scrollTo({top:0})" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+</button>
+
+<script>
+  // ── Tabs ──
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabs = btn.closest('.tabs');
+      tabs.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      tabs.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      tabs.querySelector('#tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Copy Code ──
+  function copyCode(button) {
+    const block = button.closest('.code-block');
+    const code = block.querySelector('.code-content').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      const original = button.innerHTML;
+      button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+      button.style.color = 'var(--accent-green)';
+      setTimeout(() => { button.innerHTML = original; button.style.color = ''; }, 2000);
+    });
+  }
+
+  function copyText(text, button) {
+    navigator.clipboard.writeText(text).then(() => {
+      const original = button.innerHTML;
+      button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>';
+      button.style.color = 'var(--accent-green)';
+      setTimeout(() => { button.innerHTML = original; button.style.color = ''; }, 2000);
+    });
+  }
+
+  // ── Back to top ──
+  const topBtn = document.querySelector('.back-to-top');
+  window.addEventListener('scroll', () => {
+    topBtn.classList.toggle('visible', window.scrollY > 400);
+  });
+
+  // ── Mermaid init ──
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+      fontSize: '15px',
+      primaryColor: '#1e293b',
+      primaryBorderColor: '#38bdf8',
+      primaryTextColor: '#f1f5f9',
+      lineColor: '#38bdf8',
+      secondaryColor: '#334155',
+      tertiaryColor: '#1e293b',
+      actorBorder: '#38bdf8',
+      actorBkg: '#1e293b',
+      actorTextColor: '#f1f5f9',
+      signalColor: '#f1f5f9',
+      signalTextColor: '#f1f5f9',
+      noteBkgColor: '#334155',
+      noteTextColor: '#f1f5f9',
+      noteBorderColor: '#475569',
+      actorFontSize: '15px',
+      actorFontWeight: '600',
+      messageFontSize: '14px',
+    },
+    sequence: {
+      mirrorActors: false,
+      useMaxWidth: false,
+      actorMargin: 70,
+      boxMargin: 12,
+      boxTextMargin: 8,
+      noteMargin: 12,
+      messageMargin: 42,
+    },
+  });
+
+  // ── Intersection Observer for fade-in ──
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.feature-card, .entrypoint, .api-card').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>
