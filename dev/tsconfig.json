@@ -22,11 +22,11 @@
       "payload-plugin-dictionary": [
         "../src/index.ts"
       ],
-      "payload-plugin-dictionary/client": [
-        "../src/exports/client.ts"
+      "payload-plugin-dictionary/cache": [
+        "../src/cache/getDictionary.ts"
       ],
-      "payload-plugin-dictionary/rsc": [
-        "../src/exports/rsc.ts"
+      "payload-plugin-dictionary/client": [
+        "../src/client/index.tsx"
       ]
     },
     "noEmit": true,

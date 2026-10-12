@@ -1,218 +1,355 @@
-# Payload Plugin Template
+# payload-plugin-dictionary
 
-A template repo to create a [Payload CMS](https://payloadcms.com) plugin.
+[![npm version](https://img.shields.io/npm/v/payload-plugin-dictionary.svg)](https://www.npmjs.com/package/payload-plugin-dictionary)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Payload CMS](https://img.shields.io/badge/Payload%20CMS-v3-black.svg)](https://payloadcms.com)
+[![Next.js](https://img.shields.io/badge/Next.js-15%20%7C%2016-black.svg)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue.svg)](https://www.typescriptlang.org)
 
-Payload is built with a robust infrastructure intended to support Plugins with ease. This provides a simple, modular, and reusable way for developers to extend the core capabilities of Payload.
+A high-performance **Payload CMS v3** plugin that migrates static front-end translation keys (`en.json`, `ar.json`, `fr.json`) into your database. Empower content editors to manage UI microcopy—such as buttons, navigation labels, headers, and error messages—directly within the Payload Admin panel, with instant on-demand cache revalidation and zero required third-party frontend dependencies.
 
-To build your own Payload plugin, all you need is:
+---
 
-- An understanding of the basic Payload concepts
-- And some JavaScript/Typescript experience
+## 🌟 Why This Plugin?
 
-## Background
+| Traditional Static i18n (`en.json`)                | With `payload-plugin-dictionary`                        |
+| -------------------------------------------------- | ------------------------------------------------------- |
+| Hardcoded in Git repository                        | Managed in Payload Admin Panel                          |
+| Copy changes require Pull Requests & redeployments | Instant updates with zero downtime                      |
+| Content editors cannot modify microcopy            | Content editors have full localized control             |
+| Often requires bulky client bundles                | Next.js Server Components with automatic cache eviction |
 
-Here is a short recap on how to integrate plugins with Payload, to learn more visit the [plugin overview page](https://payloadcms.com/docs/plugins/overview).
+---
 
-### How to install a plugin
+## ✨ Features
 
-To install any plugin, simply add it to your payload.config() in the Plugin array.
+- 🗄️ **Database-Backed Translations**: Moves static translation keys into a dedicated `translations` collection with native localization support.
+- ⚡ **Next.js Data Cache Integration**: Wrapped with `unstable_cache` and tagged with `'payload-translations'`, ensuring database queries are cached and served in milliseconds.
+- 🔄 **Instant On-Demand Revalidation**: Automatically invalidates cache tags when translations are created, updated, or deleted via Payload collection hooks.
+- ⚛️ **Zero Third-Party Dependency Mode**: Full standalone support with callable `t('key')` functions for React Server Components and Client Components (`<DictionaryProvider>` + `useTranslations()`).
+- 🔌 **Seamless `next-intl` & `i18next` Compatibility**: Easily acts as the dynamic message provider for existing i18n libraries.
+- 🌐 **Built-in REST Endpoint**: Direct HTTP access via `GET /api/dictionary/:namespace?locale=:locale` with HTTP caching headers.
+- 🛡️ **Type Safety & CLI Generator**: Run `npx payload-dictionary generate` to generate TypeScript types directly from database keys for full IDE autocompletion.
+- 🔒 **Data Integrity**: Enforces dot-separated key notation (e.g., `auth.login_button`) and ensures composite uniqueness across `(namespace, key)` pairs.
 
-```ts
-import myPlugin from 'my-plugin'
+---
 
-export const config = buildConfig({
+## 📦 Installation
+
+```bash
+# Using pnpm
+pnpm add payload-plugin-dictionary
+
+# Using npm
+npm install payload-plugin-dictionary
+
+# Using yarn
+yarn add payload-plugin-dictionary
+```
+
+### Peer Dependencies
+
+- `payload`: `^3.90.0`
+- `next`: `^15.0.0 || ^16.0.0`
+- `react`: `^19.0.0` _(optional; only needed if using client `<DictionaryProvider>` or `useTranslations`)_
+
+---
+
+## ⚙️ Configuration
+
+Add `dictionaryPlugin` to your `payload.config.ts`:
+
+```typescript
+import { buildConfig } from 'payload'
+import { dictionaryPlugin } from 'payload-plugin-dictionary'
+
+export default buildConfig({
+  localization: {
+    locales: ['en', 'ar', 'fr'],
+    defaultLocale: 'en',
+    fallback: true,
+  },
   plugins: [
-    // You can pass options to the plugin
-    myPlugin({
-      enabled: true,
+    dictionaryPlugin({
+      namespaces: ['common', 'auth', 'marketing'],
+      defaultNamespace: 'common',
     }),
   ],
+  // ... your remaining Payload configuration
 })
 ```
 
-### Initialization
+### Plugin Options
 
-The initialization process goes in the following order:
+| Option             | Type       | Required | Default         | Description                                                         |
+| ------------------ | ---------- | -------- | --------------- | ------------------------------------------------------------------- |
+| `namespaces`       | `string[]` | **Yes**  | —               | Array of permitted namespaces (e.g. `['common', 'auth']`).          |
+| `defaultNamespace` | `string`   | No       | `namespaces[0]` | Default namespace selected when creating new translation documents. |
 
-1. Incoming config is validated
-2. **Plugins execute**
-3. Default options are integrated
-4. Sanitization cleans and validates data
-5. Final config gets initialized
+---
 
-## Building the Plugin
+## 🚀 Usage Guide
 
-When you build a plugin, you are purely building a feature for your project and then abstracting it outside of the project.
+You can use this plugin in **two ways**:
 
-### Template Files
+1. **Standalone (Zero Dependencies)**: Using our built-in `getTranslations`, `<DictionaryProvider>`, and `useTranslations()` hook.
+2. **With an i18n Library (`next-intl`)**: Supplying the dictionary messages directly to `next-intl`.
 
-In the Payload [plugin template](https://github.com/payloadcms/payload/tree/3.x/templates/plugin), you will see a common file structure that is used across all plugins:
+---
 
-1. root folder
-2. /src folder
-3. /dev folder
+### Option 1: Standalone (Zero Dependencies)
 
-#### Root
+#### 1. React Server Components (RSC)
 
-In the root folder, you will see various files that relate to the configuration of the plugin. We set up our environment in a similar manner in Payload core and across other projects, so hopefully these will look familiar:
+In any React Server Component, call `getTranslations()`:
 
-- **README**.md\* - This contains instructions on how to use the template. When you are ready, update this to contain instructions on how to use your Plugin.
-- **package**.json\* - Contains necessary scripts and dependencies. Overwrite the metadata in this file to describe your Plugin.
-- .**eslint**.config.js - Eslint configuration for reporting on problematic patterns.
-- .**gitignore** - List specific untracked files to omit from Git.
-- .**prettierrc**.json - Configuration for Prettier code formatting.
-- **tsconfig**.json - Configures the compiler options for TypeScript
-- .**swcrc** - Configuration for SWC, a fast compiler that transpiles and bundles TypeScript.
-- **vitest**.config.js - Config file for Vitest, defining how tests are run and how modules are resolved
+```tsx
+// app/[locale]/page.tsx
+import { getTranslations } from 'payload-plugin-dictionary/cache'
 
-**IMPORTANT\***: You will need to modify these files.
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  const t = await getTranslations('common', locale)
 
-#### Dev
+  return (
+    <main>
+      {/* 1. Basic lookup */}
+      <h1>{t('home.title')}</h1>
 
-In the dev folder, you’ll find a basic payload project, created with `npx create-payload-app` and the blank template.
+      {/* 2. Variable interpolation */}
+      <p>{t('welcome.user', { name: 'Sarah' })}</p>
 
-**IMPORTANT**: Make a copy of the `.env.example` file and rename it to `.env`. Update the `DATABASE_URL` to match the database you are using and your plugin name. Update `PAYLOAD_SECRET` to a unique string.
-**You will not be able to run `pnpm/yarn dev` until you have created this `.env` file.**
-
-`myPlugin` has already been added to the `payload.config()` file in this project.
-
-```ts
-plugins: [
-  myPlugin({
-    collections: {
-      posts: true,
-    },
-  }),
-]
+      {/* 3. Safe fallback if key is missing */}
+      <button>{t('button.submit', 'Submit')}</button>
+    </main>
+  )
+}
 ```
 
-Later when you rename the plugin or add additional options, **make sure to update it here**.
+#### 2. React Client Components
 
-You may wish to add collections or expand the test project depending on the purpose of your plugin. Just make sure to keep this dev environment as simplified as possible - users should be able to install your plugin without additional configuration required.
+To use translations inside `'use client'` components, fetch the dictionary in your Server Layout and wrap the children with `<DictionaryProvider>`:
 
-When you’re ready to start development, initiate the project with `pnpm/npm/yarn dev` and pull up [http://localhost:3000](http://localhost:3000) in your browser.
+```tsx
+// app/[locale]/layout.tsx (Server Component)
+import { getDictionary } from 'payload-plugin-dictionary/cache'
+import { DictionaryProvider } from 'payload-plugin-dictionary/client'
 
-#### Src
+export default async function LocaleLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
 
-Now that we have our environment setup and we have a dev project ready to - it’s time to build the plugin!
+  // Fetch raw dictionary for the client provider
+  const dictionary = await getDictionary('common', locale)
 
-**index.ts**
+  return (
+    <html lang={locale}>
+      <body>
+        <DictionaryProvider dictionary={dictionary}>{children}</DictionaryProvider>
+      </body>
+    </html>
+  )
+}
+```
 
-The essence of a Payload plugin is simply to extend the payload config - and that is exactly what we are doing in this file.
+Now call `useTranslations()` in any Client Component anywhere in the tree:
 
-```ts
-export const myPlugin =
-  (pluginOptions: MyPluginConfig) =>
-  (config: Config): Config => {
-    // do cool stuff with the config here
+```tsx
+// components/CounterButton.tsx
+'use client'
 
-    return config
+import { useTranslations } from 'payload-plugin-dictionary/client'
+import { useState } from 'react'
+
+export function CounterButton() {
+  const t = useTranslations()
+  const [count, setCount] = useState(0)
+
+  return (
+    <div>
+      <button onClick={() => setCount((c) => c + 1)}>
+        {t('button.click_me')} ({count})
+      </button>
+
+      {/* Interpolation in client components */}
+      <p>{t('items.count', { count })}</p>
+
+      {/* Fallback support */}
+      <button onClick={() => setCount(0)}>{t('button.reset', 'Reset Counter')}</button>
+    </div>
+  )
+}
+```
+
+#### 3. Translator Function API
+
+The `t` function returned by `getTranslations()` and `useTranslations()` provides:
+
+| Signature                  | Description                                                | Example                                      |
+| -------------------------- | ---------------------------------------------------------- | -------------------------------------------- |
+| `t(key)`                   | Looks up key; returns key string if missing                | `t('button.submit')`                         |
+| `t(key, params)`           | Replaces `{var}` placeholders with values                  | `t('greeting', { name: 'Alex' })`            |
+| `t(key, fallback)`         | Returns fallback text if key is missing                    | `t('button.save', 'Save Changes')`           |
+| `t(key, params, fallback)` | Replaces placeholders with fallback text if key is missing | `t('hello', { name: 'Alex' }, 'Hello Alex')` |
+| `t.has(key)`               | Returns `true` if key exists in dictionary                 | `if (t.has('banner.alert')) ...`             |
+| `t.raw(key)`               | Returns raw uninterpolated string or `undefined`           | `t.raw('welcome')`                           |
+| `t.dictionary`             | Direct reference to `Record<string, string>` map           | `Object.keys(t.dictionary)`                  |
+
+---
+
+### Option 2: Using with `next-intl`
+
+If your project already uses `next-intl`, `payload-plugin-dictionary` integrates seamlessly as the message source.
+
+Configure `i18n/request.ts`:
+
+```typescript
+// i18n/request.ts
+import { getRequestConfig } from 'next-intl/server'
+import { getDictionary } from 'payload-plugin-dictionary/cache'
+
+export default getRequestConfig(async ({ requestLocale }) => {
+  const locale = (await requestLocale) || 'en'
+
+  // Fetch from Payload database with automatic Next.js caching
+  const messages = await getDictionary('common', locale)
+
+  return {
+    locale,
+    messages,
   }
-```
-
-First, we receive the existing payload config along with any plugin options.
-
-From here, you can extend the config as you wish.
-
-Finally, you return the config and that is it!
-
-##### Spread Syntax
-
-Spread syntax (or the spread operator) is a feature in JavaScript that uses the dot notation **(...)** to spread elements from arrays, strings, or objects into various contexts.
-
-We are going to use spread syntax to allow us to add data to existing arrays without losing the existing data. It is crucial to spread the existing data correctly – else this can cause adverse behavior and conflicts with Payload config and other plugins.
-
-Let’s say you want to build a plugin that adds a new collection:
-
-```ts
-config.collections = [
-  ...(config.collections || []),
-  // Add additional collections here
-]
-```
-
-First we spread the `config.collections` to ensure that we don’t lose the existing collections, then you can add any additional collections just as you would in a regular payload config.
-
-This same logic is applied to other properties like admin, hooks, globals:
-
-```ts
-config.globals = [
-  ...(config.globals || []),
-  // Add additional globals here
-]
-
-config.hooks = {
-  ...(incomingConfig.hooks || {}),
-  // Add additional hooks here
-}
-```
-
-Some properties will be slightly different to extend, for instance the onInit property:
-
-```ts
-import { onInitExtension } from './onInitExtension' // example file
-
-config.onInit = async (payload) => {
-  if (incomingConfig.onInit) await incomingConfig.onInit(payload)
-  // Add additional onInit code by defining an onInitExtension function
-  onInitExtension(pluginOptions, payload)
-}
-```
-
-If you wish to add to the onInit, you must include the **async/await**. We don’t use spread syntax in this case, instead you must await the existing `onInit` before running additional functionality.
-
-In the template, we have stubbed out some addition `onInit` actions that seeds in a document to the `plugin-collection`, you can use this as a base point to add more actions - and if not needed, feel free to delete it.
-
-##### Types.ts
-
-If your plugin has options, you should define and provide types for these options.
-
-```ts
-export type MyPluginConfig = {
-  /**
-   * List of collections to add a custom field
-   */
-  collections?: Partial<Record<CollectionSlug, true>>
-  /**
-   * Disable the plugin
-   */
-  disabled?: boolean
-}
-```
-
-If possible, include JSDoc comments to describe the options and their types. This allows a developer to see details about the options in their editor.
-
-##### Testing
-
-Having a test suite for your plugin is essential to ensure quality and stability. **Vitest** is a fast, modern testing framework that works seamlessly with Vite and supports TypeScript out of the box.
-
-Vitest organizes tests into test suites and cases, similar to other testing frameworks. We recommend creating individual tests based on the expected behavior of your plugin from start to finish.
-
-Writing tests with Vitest is very straightforward, and you can learn more about how it works in the [Vitest documentation.](https://vitest.dev/)
-
-For this template, we stubbed out `int.spec.ts` in the `dev` folder where you can write your tests.
-
-```ts
-describe('Plugin tests', () => {
-  // Create tests to ensure expected behavior from the plugin
-  it('some condition that must be met', () => {
-   // Write your test logic here
-   expect(...)
-  })
 })
 ```
 
-## Best practices
+Consume in your components using standard `next-intl` APIs:
 
-With this tutorial and the plugin template, you should have everything you need to start building your own plugin.
-In addition to the setup, here are other best practices aim we follow:
+```tsx
+import { useTranslations } from 'next-intl'
 
-- **Providing an enable / disable option:** For a better user experience, provide a way to disable the plugin without uninstalling it. This is especially important if your plugin adds additional webpack aliases, this will allow you to still let the webpack run to prevent errors.
-- **Include tests in your GitHub CI workflow**: If you’ve configured tests for your package, integrate them into your workflow to run the tests each time you commit to the plugin repository. Learn more about [how to configure tests into your GitHub CI workflow.](https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs)
-- **Publish your finished plugin to NPM**: The best way to share and allow others to use your plugin once it is complete is to publish an NPM package. This process is straightforward and well documented, find out more [creating and publishing a NPM package here.](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/).
-- **Add payload-plugin topic tag**: Apply the tag **payload-plugin **to your GitHub repository. This will boost the visibility of your plugin and ensure it gets listed with [existing payload plugins](https://github.com/topics/payload-plugin).
-- **Use [Semantic Versioning](https://semver.org/) (SemVar)** - With the SemVar system you release version numbers that reflect the nature of changes (major, minor, patch). Ensure all major versions reference their Payload compatibility.
+export function Header() {
+  const t = useTranslations()
+  return <h1>{t('nav.home')}</h1>
+}
+```
 
-# Questions
+---
 
-Please contact [Payload](mailto:dev@payloadcms.com) with any questions about using this plugin template.
+## 🌐 Built-in REST API
+
+The plugin automatically registers an HTTP REST endpoint on your Payload server:
+
+```http
+GET /api/dictionary/:namespace?locale=:locale
+```
+
+### Example Request
+
+```http
+GET /api/dictionary/common?locale=ar
+```
+
+### Example Response
+
+```json
+{
+  "button.submit": "إرسال",
+  "button.cancel": "إلغاء",
+  "nav.home": "الرئيسية",
+  "footer.copyright": "جميع الحقوق محفوظة © 2026"
+}
+```
+
+### Response Headers
+
+- `Content-Type: application/json`
+- `Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400`
+
+---
+
+## 🛠️ TypeScript CLI Type Generator
+
+Generate strongly-typed TypeScript definitions from your database keys for IDE autocompletion:
+
+```bash
+# Run the generator
+npx payload-dictionary generate
+```
+
+### Generated Output (`dictionary.d.ts`)
+
+```typescript
+/**
+ * Auto-generated by payload-dictionary. Do not edit manually.
+ */
+export type CommonTranslationKeys = 'button.submit' | 'button.cancel' | 'home.title'
+
+export type AuthTranslationKeys = 'login.button' | 'error.invalid_credentials'
+
+export type AllTranslationKeys = `common:${CommonTranslationKeys}` | `auth:${AuthTranslationKeys}`
+```
+
+---
+
+## 🔄 Cache Architecture & Invalidation
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Content Editor
+    participant Payload as Payload Admin Panel
+    participant DB as Database
+    participant NextCache as Next.js Data Cache
+    actor User as Frontend User
+
+    Admin->>Payload: Updates "button.submit" to "Save"
+    Payload->>DB: Saves localized document
+    Payload->>NextCache: revalidateTag('payload-translations', 'max')
+    User->>NextCache: Requests page
+    NextCache->>DB: Cache miss -> fetches updated dictionary
+    NextCache-->>User: Returns updated translation ("Save")
+```
+
+- Invalidation occurs automatically on `afterChange` and `afterDelete` hooks.
+- Compatible with Next.js 15 and Next.js 16 cache models.
+- Gracefully handles execution outside Next.js request contexts (e.g., test suites, CLI tools).
+
+---
+
+## 📁 Package Entrypoints
+
+| Subpath                            | Target                       | Use Case                                                                |
+| ---------------------------------- | ---------------------------- | ----------------------------------------------------------------------- |
+| `payload-plugin-dictionary`        | `src/index.ts`               | Plugin initialization & root types                                      |
+| `payload-plugin-dictionary/cache`  | `src/cache/getDictionary.ts` | `getTranslations()`, `getDictionary()` (Server-only)                    |
+| `payload-plugin-dictionary/client` | `src/client/index.tsx`       | `<DictionaryProvider>`, `useTranslations()`, `useDictionary()` (Client) |
+
+---
+
+## 🧪 Testing
+
+The repository includes complete integration and end-to-end tests:
+
+```bash
+# Run unit & integration tests (Vitest)
+pnpm test:int
+
+# Run admin panel E2E tests (Playwright)
+pnpm test:e2e
+
+# Run linter
+pnpm lint
+
+# Build production bundle
+pnpm build
+```
+
+---
+
+## 📄 License
+
+MIT © [Mahmoud Hassan](https://github.com/Mhmod-Hsn)

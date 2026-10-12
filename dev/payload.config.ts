@@ -3,7 +3,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { MongoMemoryReplSet } from 'mongodb-memory-server'
 import path from 'path'
 import { buildConfig } from 'payload'
-import { payloadPluginDictionary } from 'payload-plugin-dictionary'
+import { dictionaryPlugin } from 'payload-plugin-dictionary'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
@@ -54,14 +54,17 @@ const buildConfigWithMemoryDB = async () => {
     }),
     editor: lexicalEditor(),
     email: testEmailAdapter,
+    localization: {
+      defaultLocale: 'en',
+      locales: ['en', 'ar', 'fr'],
+    },
     onInit: async (payload) => {
       await seed(payload)
     },
     plugins: [
-      payloadPluginDictionary({
-        collections: {
-          posts: true,
-        },
+      dictionaryPlugin({
+        defaultNamespace: 'common',
+        namespaces: ['common', 'auth', 'marketing'],
       }),
     ],
     secret: process.env.PAYLOAD_SECRET || 'test-secret_key',

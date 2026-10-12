@@ -1,7 +1,7 @@
 {
   "name": "payload-plugin-dictionary",
   "version": "1.0.0",
-  "description": "A blank template to get started with Payload 3.0",
+  "description": "A Payload CMS v3 plugin that moves static frontend translation keys into the database, enabling content editors to manage UI translations with full localization support.",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -10,26 +10,30 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./client": {
-      "import": "./src/exports/client.ts",
-      "types": "./src/exports/client.ts",
-      "default": "./src/exports/client.ts"
+    "./cache": {
+      "import": "./src/cache/getDictionary.ts",
+      "types": "./src/cache/getDictionary.ts",
+      "default": "./src/cache/getDictionary.ts"
     },
-    "./rsc": {
-      "import": "./src/exports/rsc.ts",
-      "types": "./src/exports/rsc.ts",
-      "default": "./src/exports/rsc.ts"
+    "./client": {
+      "import": "./src/client/index.tsx",
+      "types": "./src/client/index.tsx",
+      "default": "./src/client/index.tsx"
     }
   },
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "bin": {
+    "payload-dictionary": "./dist/bin/generate.js"
+  },
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
   "scripts": {
     "build": "pnpm copyfiles && pnpm build:types && pnpm build:swc",
-    "build:swc": "swc ./src -d ./dist --config-file .swcrc --strip-leading-paths",
-    "build:types": "tsc --outDir dist --rootDir ./src",
+    "build:swc": "swc ./src ./bin -d ./dist --config-file .swcrc --strip-leading-paths",
+    "build:types": "tsc --outDir dist --rootDir ./",
     "clean": "rimraf {dist,*.tsbuildinfo}",
     "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/",
     "dev": "next dev dev --turbo",
@@ -80,7 +84,14 @@
     "vitest": "4.0.18"
   },
   "peerDependencies": {
-    "payload": "^3.90.0"
+    "next": "^15.0.0 || ^16.0.0",
+    "payload": "^3.90.0",
+    "react": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=20.18.1",
@@ -93,15 +104,15 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       },
-      "./client": {
-        "import": "./dist/exports/client.js",
-        "types": "./dist/exports/client.d.ts",
-        "default": "./dist/exports/client.js"
+      "./cache": {
+        "import": "./dist/cache/getDictionary.js",
+        "types": "./dist/cache/getDictionary.d.ts",
+        "default": "./dist/cache/getDictionary.js"
       },
-      "./rsc": {
-        "import": "./dist/exports/rsc.js",
-        "types": "./dist/exports/rsc.d.ts",
-        "default": "./dist/exports/rsc.js"
+      "./client": {
+        "import": "./dist/client/index.js",
+        "types": "./dist/client/index.d.ts",
+        "default": "./dist/client/index.js"
       }
     },
     "main": "./dist/index.js",
@@ -113,6 +124,21 @@
       "esbuild",
       "unrs-resolver"
     ]
+  },
+  "keywords": [
+    "payload",
+    "payloadcms",
+    "plugin",
+    "dictionary",
+    "translations",
+    "i18n",
+    "next-intl",
+    "i18next",
+    "localization"
+  ],
+  "repository": {
+    "type": "git",
+    "url": ""
   },
   "registry": "https://registry.npmjs.org/",
   "dependencies": {}

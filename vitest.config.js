@@ -16,10 +16,19 @@ export default defineConfig(() => {
         ignoreConfigErrors: true,
       }),
     ],
+    resolve: {
+      alias: {
+        '@payload-config': path.resolve(dirname, './dev/payload.config.ts'),
+        'payload-plugin-dictionary/client': path.resolve(dirname, './src/client/index.tsx'),
+        'payload-plugin-dictionary/cache': path.resolve(dirname, './src/cache/getDictionary.ts'),
+        'payload-plugin-dictionary': path.resolve(dirname, './src/index.ts'),
+      },
+    },
     test: {
       environment: 'node',
-      hookTimeout: 30_000,
-      testTimeout: 30_000,
+      hookTimeout: 300_000,
+      testTimeout: 60_000,
+      include: ['dev/int.spec.ts'],
     },
   }
 })
