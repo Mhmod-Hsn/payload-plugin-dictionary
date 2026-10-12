@@ -1,12 +1,15 @@
 # payload-plugin-dictionary
 
 [![npm version](https://img.shields.io/npm/v/payload-plugin-dictionary.svg)](https://www.npmjs.com/package/payload-plugin-dictionary)
+[![Documentation](https://img.shields.io/badge/Documentation-GitHub%20Pages-blue.svg)](https://mhmod-hsn.github.io/payload-plugin-dictionary/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Payload CMS](https://img.shields.io/badge/Payload%20CMS-v3-black.svg)](https://payloadcms.com)
 [![Next.js](https://img.shields.io/badge/Next.js-15%20%7C%2016-black.svg)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue.svg)](https://www.typescriptlang.org)
 
 A high-performance **Payload CMS v3** plugin that migrates static front-end translation keys (`en.json`, `ar.json`, `fr.json`) into your database. Empower content editors to manage UI microcopy—such as buttons, navigation labels, headers, and error messages—directly within the Payload Admin panel, with instant on-demand cache revalidation and zero required third-party frontend dependencies.
+
+🌐 **Website & Documentation:** [https://mhmod-hsn.github.io/payload-plugin-dictionary/](https://mhmod-hsn.github.io/payload-plugin-dictionary/)
 
 ---
 
